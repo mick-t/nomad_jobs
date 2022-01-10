@@ -1,0 +1,58 @@
+# https://github.com/hashicorp-demoapp/public-api/blob/master/main.go
+job "tfc-agent" {
+  datacenters = ["dc1"]
+  type = "service"
+
+  group "tfc-agent" {
+    count = 1
+
+    restart {
+      attempts = 10
+      interval = "5m"
+      delay    = "25s"
+      mode     = "delay"
+    }
+
+    task "tfc-agent" {
+      driver = "docker"
+
+      env = {
+        TFC_AGENT_TOKEN = "${tfc_agent_token}"
+        TFC_AGENT_NAME = "nomad-$${node.unique.name}"
+      }
+
+      config {
+        image = "hashicorp/tfc-agent:latest"
+        dns_servers = ["172.17.0.1"]
+
+        port_map {
+          pub_api = 8080
+        }
+      }
+
+      resources {
+        #cpu    = 500
+        #memory = 1024
+
+        network {
+          # port "pub_api" {
+          #   static = 8080
+          # }
+        }
+      }
+      service {
+        name = "tfc-agent"
+        # port = "pub_api"
+        # tags = [
+        #   "traefik.enable=true",
+        #   "traefik.http.routers.public.rule=Path(`/public`)",
+        # ]
+        # check {
+        #   type     = "tcp"
+        #   interval = "10s"
+        #   timeout  = "2s"
+        # }
+      }
+    }
+  }
+}
